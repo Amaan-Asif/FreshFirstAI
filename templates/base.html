@@ -14,16 +14,45 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="mainNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'core:home' %}">Home</a>
                     </li>
+                </ul>
+                <ul class="navbar-nav ms-auto align-items-lg-center">
+                    {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <span class="navbar-text me-lg-3">Hello, {{ user.username }}</span>
+                    </li>
+                    <li class="nav-item">
+                        <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+                        </form>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'accounts:login' %}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'accounts:register' %}">Register</a>
+                    </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
 
     <main class="container py-4">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
         {% block content %}{% endblock %}
     </main>
 

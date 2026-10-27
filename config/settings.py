@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from django.contrib.messages import constants as messages_constants
 from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,6 +29,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "core",
+    "accounts",
 ]
 
 MIDDLEWARE = [
@@ -81,3 +83,13 @@ USE_TZ = True
 STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Login and logout behaviour
+LOGIN_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "core:home"
+LOGOUT_REDIRECT_URL = "core:home"
+
+# Make Django message levels match Bootstrap alert colours
+MESSAGE_TAGS = {
+    messages_constants.ERROR: "danger",
+}
