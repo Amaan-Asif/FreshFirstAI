@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - FreshFirst AI{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0">Dashboard</h1>
+        <div class="text-muted small">{{ total }} item(s) in your inventory. "Expiring soon" means within {{ soon_days }} days.</div>
+    </div>
+    <a href="{% url 'inventory:add' %}" class="btn btn-success">+ Add item</a>
+</div>
+
+<div class="row g-3 mb-4">
+    {% for section in sections %}
+    <div class="col-12 col-md-4">
+        <div class="card shadow-sm border-{{ section.color }}">
+            <div class="card-body text-center">
+                <div class="display-6 fw-bold">{{ section.items|length }}</div>
+                <div class="text-muted">{{ section.title }}</div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% for section in sections %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-{{ section.color }} {% if section.color == 'warning' %}text-dark{% else %}text-white{% endif %}">
+        <strong>{{ section.title }}</strong> ({{ section.items|length }})
+    </div>
+    {% if section.items %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Quantity</th>
+                    <th>Expires</th>
+                    <th>When</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in section.items %}
+                <tr>
+                    <td><strong>{{ item.name }}</strong></td>
+                    <td>{{ item.get_category_display }}</td>
+                    <td>{{ item.quantity|floatformat:"-2" }} {{ item.unit }}</td>
+                    <td>{{ item.expiry_date|date:"d M Y" }}</td>
+                    <td>
+                        {% if section.key == "expired" %}
+                        Expired {{ item.days_until_expiry|cut:"-" }} day(s) ago
+                        {% elif item.days_until_expiry == 0 %}
+                        Expires today
+                        {% else %}
+                        In {{ item.days_until_expiry }} day(s)
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card-body text-muted">{{ section.empty }}</div>
+    {% endif %}
+</div>
+{% endfor %}
+
+<a href="{% url 'inventory:list' %}" class="btn btn-outline-secondary">Manage all items</a>
+{% endblock %}
