@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}My Food - FreshFirst AI{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">My Food Inventory</h1>
+    <a href="{% url 'inventory:add' %}" class="btn btn-success">+ Add item</a>
+</div>
+
+{% if items %}
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Quantity</th>
+                    <th>Purchased</th>
+                    <th>Expires</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>
+                        <strong>{{ item.name }}</strong>
+                        {% if item.storage_notes %}
+                        <div class="small text-muted">{{ item.storage_notes }}</div>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.get_category_display }}</td>
+                    <td>{{ item.quantity|floatformat:"-2" }} {{ item.unit }}</td>
+                    <td>{{ item.purchase_date|date:"d M Y" }}</td>
+                    <td>{{ item.expiry_date|date:"d M Y" }}</td>
+                    <td>
+                        {% if item.status == "expired" %}
+                        <span class="badge bg-danger">Expired</span>
+                        {% elif item.status == "expiring_soon" %}
+                        <span class="badge bg-warning text-dark">
+                            {% if item.days_until_expiry == 0 %}Expires today{% else %}Expires in {{ item.days_until_expiry }} day(s){% endif %}
+                        </span>
+                        {% else %}
+                        <span class="badge bg-success">Fresh</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end text-nowrap">
+                        <a href="{% url 'inventory:edit' item.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                        <a href="{% url 'inventory:delete' item.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card shadow-sm">
+    <div class="card-body text-center py-5">
+        <p class="lead mb-3">Your inventory is empty.</p>
+        <a href="{% url 'inventory:add' %}" class="btn btn-success">Add your first item</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
