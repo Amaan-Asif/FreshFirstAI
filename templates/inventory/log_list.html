@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}History - FreshFirst AI{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Consumption and Waste History</h1>
+    <a href="{% url 'inventory:list' %}" class="btn btn-outline-secondary">Back to inventory</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-4">
+        <div class="card shadow-sm border-success">
+            <div class="card-body text-center">
+                <div class="display-6 fw-bold">{{ consumed_count }}</div>
+                <div class="text-muted">Consumed records</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card shadow-sm border-danger">
+            <div class="card-body text-center">
+                <div class="display-6 fw-bold">{{ wasted_count }}</div>
+                <div class="text-muted">Wasted records</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card shadow-sm border-warning">
+            <div class="card-body text-center">
+                <div class="display-6 fw-bold">₹{{ wasted_cost|floatformat:2 }}</div>
+                <div class="text-muted">Money wasted</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if logs %}
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Date</th>
+                    <th>Item</th>
+                    <th>Category</th>
+                    <th>Quantity</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                    <th>Cost</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.logged_on|date:"d M Y" }}</td>
+                    <td><strong>{{ log.item_name }}</strong></td>
+                    <td>{{ log.get_category_display }}</td>
+                    <td>{{ log.quantity|floatformat:"-2" }} {{ log.unit }}</td>
+                    <td>
+                        {% if log.action == "wasted" %}
+                        <span class="badge bg-danger">Wasted</span>
+                        {% else %}
+                        <span class="badge bg-success">Consumed</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ log.get_reason_display|default:"-" }}</td>
+                    <td>{% if log.estimated_cost %}₹{{ log.estimated_cost|floatformat:2 }}{% else %}-{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card shadow-sm">
+    <div class="card-body text-center py-5">
+        <p class="lead mb-3">No records yet.</p>
+        <a href="{% url 'inventory:list' %}" class="btn btn-success">Go to your inventory</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -82,3 +82,62 @@ class FoodItem(models.Model):
         if days <= EXPIRING_SOON_DAYS:
             return "expiring_soon"
         return "fresh"
+
+
+class FoodLog(models.Model):
+    """A record of food that was consumed or wasted.
+
+    The item's name, category and unit are copied into the log so the
+    history stays correct even after the inventory item is deleted.
+    """
+
+    class Action(models.TextChoices):
+        CONSUMED = "consumed", "Consumed"
+        WASTED = "wasted", "Wasted"
+
+    class Reason(models.TextChoices):
+        EXPIRED = "expired", "Expired before use"
+        SPOILED = "spoiled", "Spoiled or went bad"
+        TOO_MUCH = "too_much", "Bought or cooked too much"
+        LEFTOVERS = "leftovers", "Leftovers not eaten"
+        DISLIKED = "disliked", "Did not like it"
+        OTHER = "other", "Other"
+
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="food_logs",
+    )
+    food_item = models.ForeignKey(
+        FoodItem,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="logs",
+    )
+    item_name = models.CharField(max_length=100)
+    category = models.CharField(max_length=20, choices=FoodItem.Category.choices)
+    unit = models.CharField(max_length=10, choices=FoodItem.Unit.choices)
+    action = models.CharField(
+        max_length=10, choices=Action.choices, default=Action.CONSUMED
+    )
+    quantity = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.01"))],
+    )
+    reason = models.CharField(max_length=20, choices=Reason.choices, blank=True)
+    estimated_cost = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
+    logged_on = models.DateField(default=timezone.localdate)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-logged_on", "-id"]
+
+    def __str__(self):
+        return f"{self.get_action_display()} {self.quantity} {self.unit} {self.item_name}"

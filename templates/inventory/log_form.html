@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Use or waste {{ item.name }} - FreshFirst AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-1">Record use or waste</h1>
+                <p class="text-muted">
+                    <strong>{{ item.name }}</strong>: {{ item.quantity|floatformat:"-2" }} {{ item.unit }} in stock,
+                    expires {{ item.expiry_date|date:"d M Y" }}
+                </p>
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                        {% endif %}
+                        {% for error in field.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-success">Save record</button>
+                    <a href="{% url 'inventory:list' %}" class="btn btn-outline-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
