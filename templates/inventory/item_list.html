@@ -11,7 +11,47 @@
     </div>
 </div>
 
+{% if total_count %}
+<form method="get" class="card shadow-sm mb-3">
+    <div class="card-body">
+        <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-4">
+                <label for="q" class="form-label small mb-1">Search by name</label>
+                <input type="text" name="q" id="q" value="{{ query }}" class="form-control" placeholder="e.g. milk">
+            </div>
+            <div class="col-6 col-md-3">
+                <label for="category" class="form-label small mb-1">Category</label>
+                <select name="category" id="category" class="form-select">
+                    <option value="">All categories</option>
+                    {% for value, label in categories %}
+                    <option value="{{ value }}" {% if value == category %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <label for="status" class="form-label small mb-1">Status</label>
+                <select name="status" id="status" class="form-select">
+                    <option value="">All statuses</option>
+                    {% for value, label in statuses %}
+                    <option value="{{ value }}" {% if value == status %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-success flex-fill">Filter</button>
+                {% if has_filters %}
+                <a href="{% url 'inventory:list' %}" class="btn btn-outline-secondary">Clear</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</form>
+{% endif %}
+
 {% if items %}
+{% if has_filters %}
+<p class="text-muted small">Showing {{ items|length }} of {{ total_count }} item(s).</p>
+{% endif %}
 <div class="card shadow-sm">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
@@ -59,6 +99,13 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+</div>
+{% elif total_count %}
+<div class="card shadow-sm">
+    <div class="card-body text-center py-5">
+        <p class="lead mb-3">No items match your search or filters.</p>
+        <a href="{% url 'inventory:list' %}" class="btn btn-outline-secondary">Clear filters</a>
     </div>
 </div>
 {% else %}

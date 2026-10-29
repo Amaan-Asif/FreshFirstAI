@@ -1,3 +1,4 @@
+from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib import messages
@@ -5,15 +6,58 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 
 from .forms import FoodItemForm, FoodLogForm
-from .models import FoodItem, FoodLog
+from .models import EXPIRING_SOON_DAYS, FoodItem, FoodLog
+
+STATUS_CHOICES = [
+    ("expired", "Expired"),
+    ("expiring_soon", "Expiring soon"),
+    ("fresh", "Fresh"),
+]
 
 
 @login_required
 def item_list(request):
-    items = FoodItem.objects.filter(owner=request.user)
-    return render(request, "inventory/item_list.html", {"items": items})
+    all_items = FoodItem.objects.filter(owner=request.user)
+    items = all_items
+
+    query = request.GET.get("q", "").strip()
+    category = request.GET.get("category", "")
+    status = request.GET.get("status", "")
+
+    if query:
+        items = items.filter(name__icontains=query)
+
+    if category in FoodItem.Category.values:
+        items = items.filter(category=category)
+    else:
+        category = ""
+
+    today = timezone.localdate()
+    soon_cutoff = today + timedelta(days=EXPIRING_SOON_DAYS)
+
+    if status == "expired":
+        items = items.filter(expiry_date__lt=today)
+    elif status == "expiring_soon":
+        items = items.filter(expiry_date__gte=today, expiry_date__lte=soon_cutoff)
+    elif status == "fresh":
+        items = items.filter(expiry_date__gt=soon_cutoff)
+    else:
+        status = ""
+
+    context = {
+        "items": items,
+        "query": query,
+        "category": category,
+        "status": status,
+        "categories": FoodItem.Category.choices,
+        "statuses": STATUS_CHOICES,
+        "has_filters": bool(query or category or status),
+        "total_count": all_items.count(),
+    }
+    return render(request, "inventory/item_list.html", context)
 
 
 @login_required
