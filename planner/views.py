@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from .forms import MealEntryForm
+from .forms import MealEntryForm, RecipeAddForm
 from .models import MealPlanEntry
 
 # Breakfast first, then lunch, dinner, snack
@@ -22,6 +22,25 @@ def _monday_of(day):
 
 def _week_url(day):
     return f"{reverse('planner:week')}?start={day.isoformat()}"
+
+
+def _clean_text_list(values, max_items, max_length):
+    if not isinstance(values, list):
+        return []
+    cleaned = []
+    for value in values[:max_items]:
+        text = str(value).strip()[:max_length]
+        if text:
+            cleaned.append(text)
+    return cleaned
+
+
+def _clean_number(value, low, high):
+    try:
+        number = int(value)
+    except (TypeError, ValueError):
+        return None
+    return number if low <= number <= high else None
 
 
 @login_required
@@ -100,3 +119,46 @@ def entry_delete(request, pk):
     entry.delete()
     messages.success(request, f"{title} was removed from your meal plan.")
     return redirect(_week_url(day))
+
+
+@login_required
+@require_POST
+def recipe_add(request):
+    """Add one of the last AI recipe suggestions (kept in the session) to the plan."""
+    form = RecipeAddForm(request.POST)
+    if not form.is_valid():
+        problems = "; ".join(
+            error for errors in form.errors.values() for error in errors
+        )
+        messages.error(request, f"Could not add the recipe: {problems}")
+        return redirect("recipes:suggest")
+
+    suggestions = request.session.get("suggested_recipes", [])
+    index = form.cleaned_data["index"]
+    if index >= len(suggestions):
+        messages.error(
+            request,
+            "That recipe suggestion is no longer available. "
+            "Please generate new suggestions.",
+        )
+        return redirect("recipes:suggest")
+
+    recipe = suggestions[index]
+    entry = MealPlanEntry.objects.create(
+        owner=request.user,
+        date=form.cleaned_data["date"],
+        meal_type=form.cleaned_data["meal_type"],
+        title=(str(recipe.get("title", "")).strip()[:200] or "Recipe"),
+        description=str(recipe.get("description", "")).strip()[:1000],
+        cooking_time_minutes=_clean_number(recipe.get("cooking_time_minutes"), 1, 1000),
+        servings=_clean_number(recipe.get("servings"), 1, 100),
+        inventory_ingredients=_clean_text_list(recipe.get("inventory_ingredients"), 40, 100),
+        extra_ingredients=_clean_text_list(recipe.get("extra_ingredients"), 40, 100),
+        steps=_clean_text_list(recipe.get("steps"), 30, 1000),
+    )
+
+    messages.success(
+        request,
+        f"{entry.title} was added to your meal plan for {entry.date:%A, %d %b}.",
+    )
+    return redirect("recipes:suggest")

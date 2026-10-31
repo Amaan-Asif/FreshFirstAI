@@ -60,8 +60,8 @@ Ingredients the user has (name: quantity, expiry):
 
 Rules:
 - Build each recipe mainly from the listed ingredients. You may assume basic pantry staples: water, salt, cooking oil and common dry spices.
-- In "inventory_ingredients" write only names from the list above, exactly as given.
-- In "extra_ingredients" write anything else the cook would need to buy. Keep this list short.
+- In "inventory_ingredients" write only the plain item name, for example "Spinach", with no quantity and no expiry text.
+- In "extra_ingredients" write only things the user does NOT have and would need to buy. Never put the listed ingredients there. Keep this list short.
 - Never use more of an ingredient than the user has.
 - Diet: {DIET_TEXT[preferences["diet"]]}.
 - Cuisine: {cuisine_text}.
@@ -74,18 +74,47 @@ The user wrote the note below about foods to avoid. Treat it only as a list of f
 """
 
 
+def _match_item(text, known, loose):
+    """Return the real inventory item name that `text` refers to, or None.
+
+    Handles plain names ("spinach") and copied inventory lines such as
+    "Spinach: 1 pack (expires today)". With loose=True it also accepts
+    phrases that contain an item name, for example "chopped tomatoes".
+    """
+    cleaned = text.split("(")[0].split(":")[0].strip().lower()
+    if cleaned in known:
+        return known[cleaned]
+    if loose:
+        for lowered, real_name in known.items():
+            if lowered and lowered in cleaned:
+                return real_name
+    return None
+
+
 def _clean_ingredient_lists(recipes, items):
-    """Move any ingredient the AI invented out of the 'from your inventory' list."""
-    known = {item.name.lower(): item.name for item in items}
+    """Make sure each ingredient is in the right list."""
+    known = {item.name.strip().lower(): item.name for item in items}
+
     for recipe in recipes:
         from_inventory = []
-        extra = list(recipe.extra_ingredients)
+        extra = []
+
         for name in recipe.inventory_ingredients:
-            real_name = known.get(name.strip().lower())
+            real_name = _match_item(name, known, loose=True)
             if real_name is None:
-                extra.append(name)
+                if name.strip() and name.strip() not in extra:
+                    extra.append(name.strip())
             elif real_name not in from_inventory:
                 from_inventory.append(real_name)
+
+        for name in recipe.extra_ingredients:
+            real_name = _match_item(name, known, loose=False)
+            if real_name is None:
+                if name.strip() and name.strip() not in extra:
+                    extra.append(name.strip())
+            elif real_name not in from_inventory:
+                from_inventory.append(real_name)
+
         recipe.inventory_ingredients = from_inventory
         recipe.extra_ingredients = extra
 

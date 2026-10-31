@@ -1,11 +1,10 @@
-from django.shortcuts import render
-
-# Create your views here.
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+from django.utils import timezone
 
 from assistant.client import AIServiceError
 from assistant.usage import UsageLimitExceeded, check_and_record
+from planner.models import MealPlanEntry
 
 from .forms import RecipePreferencesForm
 from .services import get_usable_items, suggest_recipes
@@ -16,6 +15,7 @@ def suggest(request):
     items = get_usable_items(request.user)
     recipes = None
     error = None
+    showing_previous = False
 
     if request.method == "POST":
         form = RecipePreferencesForm(request.POST)
@@ -26,12 +26,18 @@ def suggest(request):
                 error = str(exc)
             else:
                 try:
-                    recipes = suggest_recipes(items, form.cleaned_data)
+                    result = suggest_recipes(items, form.cleaned_data)
                 except AIServiceError as exc:
                     usage.delete()  # failed requests do not count against the limit
                     error = str(exc)
+                else:
+                    recipes = [recipe.model_dump() for recipe in result]
+                    request.session["suggested_recipes"] = recipes
     else:
         form = RecipePreferencesForm()
+        if items:
+            recipes = request.session.get("suggested_recipes")
+            showing_previous = bool(recipes)
 
     return render(
         request,
@@ -41,5 +47,8 @@ def suggest(request):
             "item_count": len(items),
             "recipes": recipes,
             "error": error,
+            "showing_previous": showing_previous,
+            "today": timezone.localdate().isoformat(),
+            "meal_types": MealPlanEntry.MealType.choices,
         },
     )
