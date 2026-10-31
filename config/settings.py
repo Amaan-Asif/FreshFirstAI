@@ -3,8 +3,13 @@ from pathlib import Path
 
 from django.contrib.messages import constants as messages_constants
 from django.core.exceptions import ImproperlyConfigured
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Reads the private .env file when it exists (it never exists on a public server,
+# where real environment variables are used instead).
+load_dotenv(BASE_DIR / ".env")
 
 DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
 
@@ -32,6 +37,8 @@ INSTALLED_APPS = [
     "accounts",
     "inventory",
     "analytics",
+    "assistant",
+    "recipes",
 ]
 
 MIDDLEWARE = [
@@ -95,3 +102,18 @@ LOGOUT_REDIRECT_URL = "core:home"
 MESSAGE_TAGS = {
     messages_constants.ERROR: "danger",
 }
+
+# AI settings (the key comes from the environment, never from the code)
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
+# Models are tried in this order. If one is busy, the next one is used.
+GEMINI_MODELS = [
+    name.strip()
+    for name in os.environ.get(
+        "GEMINI_MODELS",
+        "gemini-3.5-flash,gemini-3.6-flash,gemini-3.5-flash-lite",
+    ).split(",")
+    if name.strip()
+]
+AI_DAILY_LIMIT_PER_USER = int(os.environ.get("AI_DAILY_LIMIT_PER_USER", "20"))
+AI_GLOBAL_DAILY_LIMIT = int(os.environ.get("AI_GLOBAL_DAILY_LIMIT", "200"))
+AI_COOLDOWN_SECONDS = int(os.environ.get("AI_COOLDOWN_SECONDS", "5"))
