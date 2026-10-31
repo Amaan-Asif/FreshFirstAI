@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Meal Plan - FreshFirst AI{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">Weekly Meal Plan</h1>
+        <div class="text-muted small">{{ monday|date:"d M" }} to {{ sunday|date:"d M Y" }}</div>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-secondary" href="{% url 'planner:week' %}?start={{ prev_start }}">&larr; Previous</a>
+        {% if not is_current_week %}
+        <a class="btn btn-outline-secondary" href="{% url 'planner:week' %}">This week</a>
+        {% endif %}
+        <a class="btn btn-outline-secondary" href="{% url 'planner:week' %}?start={{ next_start }}">Next &rarr;</a>
+        <a class="btn btn-success" href="{% url 'planner:add' %}">+ Add meal</a>
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-3">
+    {% for day in days %}
+    <div class="col">
+        <div class="card shadow-sm h-100 {% if day.is_today %}border-success{% endif %}">
+            <div class="card-header {% if day.is_today %}bg-success text-white{% else %}bg-white{% endif %}">
+                <strong>{{ day.date|date:"l" }}</strong>
+                <span class="small">{{ day.date|date:"d M" }}</span>
+                {% if day.is_today %}<span class="small">(today)</span>{% endif %}
+            </div>
+            <div class="card-body">
+                {% for entry in day.entries %}
+                <div class="mb-3">
+                    {% if entry.meal_type == "breakfast" %}
+                    <span class="badge bg-warning text-dark">Breakfast</span>
+                    {% elif entry.meal_type == "lunch" %}
+                    <span class="badge bg-success">Lunch</span>
+                    {% elif entry.meal_type == "dinner" %}
+                    <span class="badge bg-primary">Dinner</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Snack</span>
+                    {% endif %}
+                    <a href="{% url 'planner:detail' entry.pk %}" class="fw-semibold text-decoration-none">{{ entry.title }}</a>
+                    {% if entry.notes %}
+                    <div class="small text-muted">{{ entry.notes }}</div>
+                    {% endif %}
+                    <form method="post" action="{% url 'planner:delete' entry.pk %}" class="d-inline"
+                          onsubmit="return confirm('Remove this meal from your plan?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-link btn-sm text-danger p-0">Remove</button>
+                    </form>
+                </div>
+                {% empty %}
+                <p class="text-muted small mb-0">Nothing planned.</p>
+                {% endfor %}
+            </div>
+            <div class="card-footer bg-white">
+                <a href="{% url 'planner:add' %}?date={{ day.date|date:'Y-m-d' }}" class="small">+ Add meal</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}{{ entry.title }} - FreshFirst AI{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">{{ entry.title }}</h1>
+    <a href="{% url 'planner:week' %}?start={{ entry.date|date:'Y-m-d' }}" class="btn btn-outline-secondary">Back to plan</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <p class="mb-2">
+            <span class="badge bg-success">{{ entry.get_meal_type_display }}</span>
+            <span class="text-muted">{{ entry.date|date:"l, d M Y" }}</span>
+            {% if entry.cooking_time_minutes %}
+            <span class="badge bg-secondary">{{ entry.cooking_time_minutes }} min</span>
+            {% endif %}
+            {% if entry.servings %}
+            <span class="badge bg-secondary">Serves {{ entry.servings }}</span>
+            {% endif %}
+        </p>
+
+        {% if entry.description %}
+        <p class="text-muted">{{ entry.description }}</p>
+        {% endif %}
+
+        {% if entry.notes %}
+        <p><strong>Notes:</strong> {{ entry.notes }}</p>
+        {% endif %}
+
+        {% if entry.inventory_ingredients or entry.extra_ingredients or entry.steps %}
+        <div class="row mt-3">
+            <div class="col-md-5">
+                {% if entry.inventory_ingredients %}
+                <h2 class="h6">From your inventory</h2>
+                <ul>
+                    {% for name in entry.inventory_ingredients %}
+                    <li>{{ name }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% if entry.extra_ingredients %}
+                <h2 class="h6">You may need to buy</h2>
+                <ul>
+                    {% for name in entry.extra_ingredients %}
+                    <li>{{ name }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            <div class="col-md-7">
+                {% if entry.steps %}
+                <h2 class="h6">Steps</h2>
+                <ol>
+                    {% for step in entry.steps %}
+                    <li>{{ step }}</li>
+                    {% endfor %}
+                </ol>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'planner:delete' entry.pk %}"
+              onsubmit="return confirm('Remove this meal from your plan?');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-danger btn-sm">Remove from plan</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

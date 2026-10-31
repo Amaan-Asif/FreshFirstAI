@@ -7,5 +7,6 @@ urlpatterns = [
     path("inventory/", include("inventory.urls")),
     path("analytics/", include("analytics.urls")),
     path("recipes/", include("recipes.urls")),
+    path("planner/", include("planner.urls")),
     path("", include("core.urls")),
 ]
