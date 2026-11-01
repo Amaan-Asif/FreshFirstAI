@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "assistant",
     "recipes",
     "planner",
+    "shopping",
 ]
 
 MIDDLEWARE = [

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Shopping List - FreshFirst AI{% endblock %}
+
+{% block content %}
+<style>
+    @media print {
+        .navbar, .no-print { display: none !important; }
+    }
+</style>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">Shopping List</h1>
+        <div class="text-muted small">
+            {{ monday|date:"d M" }} to {{ sunday|date:"d M Y" }}.
+            Built from your meal plan, minus what you already have.
+        </div>
+    </div>
+    <div class="d-flex flex-wrap gap-2 no-print">
+        <a class="btn btn-outline-secondary" href="{% url 'shopping:list' %}?start={{ prev_start }}">&larr; Previous</a>
+        {% if not is_current_week %}
+        <a class="btn btn-outline-secondary" href="{% url 'shopping:list' %}">This week</a>
+        {% endif %}
+        <a class="btn btn-outline-secondary" href="{% url 'shopping:list' %}?start={{ next_start }}">Next &rarr;</a>
+    </div>
+</div>
+
+<p class="text-muted small">
+    Meals before today are skipped. The list shows what to buy, not how much, because recipes do not include amounts.
+</p>
+
+{% if meal_count == 0 %}
+<div class="card shadow-sm">
+    <div class="card-body text-center py-5">
+        <p class="lead mb-2">No planned meals to shop for in this week.</p>
+        <p class="text-muted">Add meals to your plan and the ingredients you need will appear here.</p>
+        <a href="{% url 'planner:week' %}" class="btn btn-success">Go to meal plan</a>
+    </div>
+</div>
+{% elif not items %}
+<div class="alert alert-success">
+    You already have everything you need for your {{ meal_count }} planned meal(s) this week.
+</div>
+{% else %}
+<p><strong>{{ items|length }}</strong> item(s) to buy for {{ meal_count }} planned meal(s).</p>
+
+<ul class="list-group shadow-sm mb-3" id="shopping-items">
+    {% for item in items %}
+    <li class="list-group-item">
+        <div class="form-check">
+            <input class="form-check-input shopping-check" type="checkbox" id="item-{{ forloop.counter }}">
+            <label class="form-check-label" for="item-{{ forloop.counter }}">
+                <span data-item>{{ item.name }}</span>
+                <span class="text-muted small d-block">For: {{ item.meals|join:", " }}</span>
+                {% if item.note %}
+                <span class="small d-block text-warning-emphasis">{{ item.note }}</span>
+                {% endif %}
+            </label>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+
+<div class="d-flex gap-2 no-print">
+    <button type="button" id="copy-list" class="btn btn-outline-success">Copy list</button>
+    <button type="button" onclick="window.print()" class="btn btn-outline-secondary">Print</button>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll(".shopping-check").forEach(function (box) {
+        box.addEventListener("change", function () {
+            const row = box.closest("li");
+            row.classList.toggle("text-decoration-line-through", box.checked);
+            row.classList.toggle("text-muted", box.checked);
+        });
+    });
+
+    const copyButton = document.getElementById("copy-list");
+    if (copyButton) {
+        copyButton.addEventListener("click", function () {
+            const lines = Array.from(document.querySelectorAll("[data-item]"))
+                .map(function (element) { return "- " + element.textContent.trim(); });
+            navigator.clipboard.writeText(lines.join("\n")).then(
+                function () {
+                    copyButton.textContent = "Copied!";
+                    setTimeout(function () { copyButton.textContent = "Copy list"; }, 2000);
+                },
+                function () { copyButton.textContent = "Copy failed"; }
+            );
+        });
+    }
+</script>
+{% endblock %}
