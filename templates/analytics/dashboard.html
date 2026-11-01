@@ -70,6 +70,48 @@
 </div>
 {% endwith %}
 
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <strong>AI insights</strong>
+        {% if insight %}
+        <span class="text-muted small">Generated {{ insight.generated_at }}</span>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        {% if insight %}
+        <p>{{ insight.summary }}</p>
+        <h3 class="h6">Patterns</h3>
+        <ul>
+            {% for text in insight.patterns %}
+            <li>{{ text }}</li>
+            {% endfor %}
+        </ul>
+        <h3 class="h6">Suggestions</h3>
+        <ol>
+            {% for text in insight.suggestions %}
+            <li>{{ text }}</li>
+            {% endfor %}
+        </ol>
+        <p class="text-muted small">
+            AI-generated from your recorded data. It can make mistakes.
+        </p>
+        {% else %}
+        <p class="text-muted mb-3">
+            Let AI read your waste statistics and suggest ways to waste less.
+            {% if data.stats.total_count < min_records %}
+            You need at least {{ min_records }} records first (you have {{ data.stats.total_count }}).
+            {% endif %}
+        </p>
+        {% endif %}
+        <form method="post" action="{% url 'analytics:insights' %}" id="insight-form">
+            {% csrf_token %}
+            <button type="submit" id="insight-button" class="btn btn-success btn-sm">
+                {% if insight %}Regenerate insights{% else %}Generate insights{% endif %}
+            </button>
+        </form>
+    </div>
+</div>
+
 <div class="row g-3 mb-4">
     <div class="col-12 col-lg-6">
         <div class="card shadow-sm h-100">
@@ -198,6 +240,15 @@
             }
         }
     });
+
+    const insightForm = document.getElementById("insight-form");
+    if (insightForm) {
+        insightForm.addEventListener("submit", function () {
+            const button = document.getElementById("insight-button");
+            button.disabled = true;
+            button.textContent = "Thinking... this can take up to 30 seconds";
+        });
+    }
 </script>
 {% endif %}
 {% endblock %}
