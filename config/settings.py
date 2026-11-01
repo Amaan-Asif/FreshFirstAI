@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
     "core",
     "accounts",
     "inventory",
@@ -41,6 +42,7 @@ INSTALLED_APPS = [
     "recipes",
     "planner",
     "shopping",
+    "api",
 ]
 
 MIDDLEWARE = [
@@ -119,3 +121,26 @@ GEMINI_MODELS = [
 AI_DAILY_LIMIT_PER_USER = int(os.environ.get("AI_DAILY_LIMIT_PER_USER", "20"))
 AI_GLOBAL_DAILY_LIMIT = int(os.environ.get("AI_GLOBAL_DAILY_LIMIT", "200"))
 AI_COOLDOWN_SECONDS = int(os.environ.get("AI_COOLDOWN_SECONDS", "5"))
+
+# REST API settings
+REST_FRAMEWORK = {
+    # Only logged-in users, identified by their normal website session
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {"anon": "60/hour", "user": "2000/hour"},
+    # The clickable test pages are only switched on while developing locally
+    "DEFAULT_RENDERER_CLASSES": (
+        ["rest_framework.renderers.JSONRenderer"]
+        + (["rest_framework.renderers.BrowsableAPIRenderer"] if DEBUG else [])
+    ),
+}
