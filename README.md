@@ -93,7 +93,7 @@ python -m pip install -r requirements.txt
 | `DJANGO_ALLOWED_HOSTS` | Comma-separated host names for a public server. |
 | `DJANGO_CSRF_TRUSTED_ORIGINS` | Comma-separated `https://...` origins for a public server. |
 | `GEMINI_API_KEY` | Free key from [Google AI Studio](https://aistudio.google.com). Without it, everything works except the AI features. |
-| `GEMINI_MODELS` | Models to try, in order. |
+| `GEMINI_MODEL` | Models to try, in order. |
 | `AI_DAILY_LIMIT_PER_USER`, `AI_GLOBAL_DAILY_LIMIT`, `AI_COOLDOWN_SECONDS` | Fair-use limits for the AI features. |
 | `DATABASE_URL` | PostgreSQL address for a public server. Leave empty to use SQLite. |
 
