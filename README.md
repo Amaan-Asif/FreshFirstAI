@@ -3,7 +3,7 @@
 **A smart food inventory and waste-reduction web app.** Track what is in your kitchen, see what is about to expire, record what you eat or throw away, and let AI suggest recipes and explain your waste patterns.
 
 - **Live demo:** (https://fresh-first-ai.vercel.app/)
-- **Demo login:** username `demo`, password `FreshFirst-Demo-2026` (a public demo account with sample data)
+- **Demo login:** Not currently available. Register a new account to try the application.
 
 ## Screenshots
 
