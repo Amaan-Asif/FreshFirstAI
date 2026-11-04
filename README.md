@@ -77,7 +77,7 @@ python -m pip install -r requirements.txt
 On macOS or Linux:
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/FreshFirstAI.git
+git clone https://github.com/Amaan-Asif/FreshFirstAI.git
 cd FreshFirstAI
 python3 -m venv .venv
 source .venv/bin/activate
