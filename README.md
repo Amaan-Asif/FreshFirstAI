@@ -67,7 +67,7 @@ You need Python 3.12 or newer (developed on 3.14) and Git.
 **1. Get the code and create a virtual environment** (Windows PowerShell):
 
 ```powershell
-git clone https://github.com/YOUR-USERNAME/FreshFirstAI.git
+git clone https://github.com/Amaan-Asif/FreshFirstAI.git
 cd FreshFirstAI
 py -3.14 -m venv .venv
 .\.venv\Scripts\Activate.ps1
